@@ -15,8 +15,13 @@
   </head>
   <body>
     <ul id="messages"></ul>
+    <div id="emoji-panel" style="display:none; position:fixed; bottom:60px; left:10px; background:#fff; border:1px solid #ccc; padding:5px; z-index:10;"></div>
     <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
+      <button type="button" id="emoji-btn" title="表情">😀</button>
+      <input id="input" autocomplete="off" />
+      <input type="file" id="img-input" accept="image/*" style="display:none;" />
+      <button type="button" id="img-btn" title="发送图片">🖼️</button>
+      <button type="submit">Send</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/main.js"></script>

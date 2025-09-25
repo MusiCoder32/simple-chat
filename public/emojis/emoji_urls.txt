@@ -1,0 +1,10 @@
+https://github.com/iamcal/emoji-data/raw/master/img-apple-64/1f600.png
+https://github.com/iamcal/emoji-data/raw/master/img-apple-64/1f602.png
+https://github.com/iamcal/emoji-data/raw/master/img-apple-64/1f609.png
+https://github.com/iamcal/emoji-data/raw/master/img-apple-64/1f60d.png
+https://github.com/iamcal/emoji-data/raw/master/img-apple-64/1f622.png
+https://github.com/iamcal/emoji-data/raw/master/img-apple-64/1f62d.png
+https://github.com/iamcal/emoji-data/raw/master/img-apple-64/1f618.png
+https://github.com/iamcal/emoji-data/raw/master/img-apple-64/1f44d.png
+https://github.com/iamcal/emoji-data/raw/master/img-apple-64/1f44e.png
+https://github.com/iamcal/emoji-data/raw/master/img-apple-64/1f60e.png
