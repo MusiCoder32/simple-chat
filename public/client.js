@@ -9,7 +9,9 @@ const emojiPickerEl = document.getElementById('emojiPicker');
 const roomId = new URLSearchParams(window.location.search).get('room')?.trim() || 'public';
 // roomId 根据地址栏参数决定聊天室，默认回退到公共房间。
 
-let selfSocketId = null;
+const scrollContainerEl = document.querySelector('.chat-content');
+const SCROLL_STICKY_THRESHOLD = 80; // 当距离底部不足 80px 时，判定为接近底部并自动滚动
+
 const storageKey = 'simpleChatNickname';
 let nickname = localStorage.getItem(storageKey);
 // 若本地未缓存昵称，则提示用户输入并持久化到 localStorage。
@@ -18,6 +20,8 @@ if (!nickname) {
   nickname = inputName || `访客${Math.floor(Math.random() * 9000 + 1000)}`;
   localStorage.setItem(storageKey, nickname);
 }
+
+let selfSocketId = null;
 let lastDividerTime = null;
 
 socket.on('connect', () => {
@@ -113,38 +117,46 @@ function prepareOutgoingHtml() {
 
 function appendMessage({ senderId, sender, html, timestamp }) {
   if (!html) return;
-  let createdAt = timestamp ? new Date(timestamp) : new Date(); // 尝试解析消息时间。
-  if (Number.isNaN(createdAt.getTime())) createdAt = new Date(); // 解析失败时使用当前时间。
-  maybeInsertTimeDivider(createdAt); // 判断是否需要插入时间分隔。
+  const shouldStickToBottom = isNearBottom(scrollContainerEl);
+  let createdAt = timestamp ? new Date(timestamp) : new Date();
+  if (Number.isNaN(createdAt.getTime())) createdAt = new Date();
+  maybeInsertTimeDivider(createdAt, shouldStickToBottom);
 
   const li = document.createElement('li');
-  li.className = `message${senderId === selfSocketId ? ' mine' : ''}`; // 自己的消息靠右展示。
+  li.className = `message${senderId === selfSocketId ? ' mine' : ''}`;
 
   if (senderId !== selfSocketId) {
-    const header = document.createElement('div');
-    header.className = 'message-header';
-    header.textContent = sender || '访客'; // 展示对方昵称。
-    li.appendChild(header);
+    const label = document.createElement('div');
+    label.className = 'message-label';
+    label.textContent = sender || '访客';
+    li.appendChild(label);
   }
+
+  const bubble = document.createElement('div');
+  bubble.className = `message-bubble${senderId === selfSocketId ? ' mine' : ''}`;
 
   const body = document.createElement('div');
   body.className = 'message-content';
-  body.innerHTML = sanitizeIncomingHtml(html); // 将净化后的消息内容插入。
-  li.appendChild(body);
+  body.innerHTML = sanitizeIncomingHtml(html);
+  bubble.appendChild(body);
 
-  messagesEl.appendChild(li); // 追加到消息列表。
-  messagesEl.scrollTop = messagesEl.scrollHeight; // 滚动到底，保证新消息可见。
+  li.appendChild(bubble);
+  messagesEl.appendChild(li);
+  if (shouldStickToBottom) scrollToBottom(scrollContainerEl);
 }
 
-function maybeInsertTimeDivider(date) {
+function maybeInsertTimeDivider(date, shouldStickToBottom) {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) return;
+  let inserted = false;
   if (!lastDividerTime || date.getTime() - lastDividerTime.getTime() >= 5 * 60 * 1000) {
     const divider = document.createElement('li');
     divider.className = 'time-divider';
     divider.textContent = formatDividerTime(date); // 生成“xx-xx xx:xx”样式的时间戳。
-    messagesEl.appendChild(divider); // 插入时间分隔条。
+    messagesEl.appendChild(divider);
+    inserted = true;
   }
-  lastDividerTime = date; // 记录上一次分隔时间，便于五分钟判断。
+  if (inserted && shouldStickToBottom) scrollToBottom(scrollContainerEl);
+  lastDividerTime = date;
 }
 
 function formatDividerTime(date) {
@@ -286,4 +298,14 @@ if (createRoomButton) {
     }
     popup.opener = null; // 断开新窗口与当前页的关系，提升安全性。
   });
+}
+
+function isNearBottom(container) {
+  if (!container) return true;
+  const { scrollTop, scrollHeight, clientHeight } = container;
+  return scrollHeight - (scrollTop + clientHeight) <= SCROLL_STICKY_THRESHOLD;
+}
+function scrollToBottom(container) {
+  if (!container) return;
+  container.scrollTop = container.scrollHeight;
 }
