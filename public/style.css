@@ -91,8 +91,8 @@ body {
 }
 .message-bubble {
   max-width: 70%;
-  padding: 0.75rem;
-  border-radius: 0.85rem;
+  padding: 4px 8px;
+  border-radius: 6px;
   background: #f5f9ff;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
