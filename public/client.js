@@ -7,7 +7,14 @@ const onlineCountEl = document.getElementById('onlineCount');
 const emojiPickerEl = document.getElementById('emojiPicker');
 
 let selfSocketId = null;
-const nickname = (prompt('请输入昵称') || '').trim() || `访客${Math.floor(Math.random() * 9000 + 1000)}`;
+const storageKey = 'simpleChatNickname';
+let nickname = localStorage.getItem(storageKey);
+if (!nickname) {
+  const inputName = (prompt('请输入昵称') || '').trim();
+  nickname = inputName || `访客${Math.floor(Math.random() * 9000 + 1000)}`;
+  localStorage.setItem(storageKey, nickname);
+}
+let lastDividerTime = null;
 
 socket.on('connect', () => {
   selfSocketId = socket.id;
@@ -97,16 +104,19 @@ function prepareOutgoingHtml() {
 
 function appendMessage({ senderId, sender, html, timestamp }) {
   if (!html) return;
+  let createdAt = timestamp ? new Date(timestamp) : new Date();
+  if (Number.isNaN(createdAt.getTime())) createdAt = new Date();
+  maybeInsertTimeDivider(createdAt);
+
   const li = document.createElement('li');
   li.className = `message${senderId === selfSocketId ? ' mine' : ''}`;
 
-  const header = document.createElement('div');
-  header.className = 'message-meta';
-  header.innerHTML = `
-    <span class="message-sender">${escapeHtml(sender || '访客')}</span>
-    <time class="message-time" datetime="${timestamp}">${formatTime(timestamp)}</time>
-  `;
-  li.appendChild(header);
+  if (senderId !== selfSocketId) {
+    const header = document.createElement('div');
+    header.className = 'message-header';
+    header.textContent = sender || '访客';
+    li.appendChild(header);
+  }
 
   const body = document.createElement('div');
   body.className = 'message-content';
@@ -115,6 +125,27 @@ function appendMessage({ senderId, sender, html, timestamp }) {
 
   messagesEl.appendChild(li);
   messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function maybeInsertTimeDivider(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return;
+  if (!lastDividerTime || date.getTime() - lastDividerTime.getTime() >= 5 * 60 * 1000) {
+    const divider = document.createElement('li');
+    divider.className = 'time-divider';
+    divider.textContent = formatDividerTime(date);
+    messagesEl.appendChild(divider);
+  }
+  lastDividerTime = date;
+}
+
+function formatDividerTime(date) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
 }
 
 function sanitizeIncomingHtml(html) {
