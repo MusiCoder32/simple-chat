@@ -257,3 +257,22 @@ function toggleSendButton() {
   const text = messageInputEl.textContent.replace(/\u200B/g, '').trim();
   sendButtonEl.disabled = !hasImage && !text;
 }
+
+const createRoomButton = document.getElementById('createRoomButton');
+if (createRoomButton) {
+  createRoomButton.addEventListener('click', () => {
+    const token = typeof crypto?.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    const url = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(token)}`;
+    const popup = window.open(url, '_blank', 'noopener,noreferrer');
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(url).catch(() => {});
+    }
+    if (!popup || popup.closed) {
+      alert(`新聊天已创建，链接已复制，可分享：\n${url}`);
+      return;
+    }
+    popup.opener = null;
+  });
+}
